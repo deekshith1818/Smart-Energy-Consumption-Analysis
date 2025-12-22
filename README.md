@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Smart Energy Consumption Analysis & Forecasting
 
 ## Project Overview
