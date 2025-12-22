@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Smart Energy Consumption Analysis & Forecasting
 
 ## Project Overview
@@ -24,3 +25,6 @@ This project analyzes smart home energy data to detect usage patterns and foreca
 1. Clone the repository.
 2. Open `Energy_Analysis_EDA.ipynb` in Jupyter Notebook.
 3. Ensure the dataset `HomeC.csv` is in the same directory.
+=======
+# Smart-Energy-Consumption-Analysis
+>>>>>>> 595cd30b473b48f831d31f7667a2ee7660d76ad1
