@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Energy Dashboard</title>
+    <title>Device Analysis | Smart Energy Dashboard</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -26,7 +26,7 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Overview</div>
-                    <a href="/" class="nav-link active">
+                    <a href="/" class="nav-link">
                         <span class="nav-icon">📊</span>
                         <span class="nav-text">Dashboard</span>
                     </a>
@@ -37,7 +37,7 @@
                         <span class="nav-icon">🔮</span>
                         <span class="nav-text">Predictions</span>
                     </a>
-                    <a href="/devices" class="nav-link">
+                    <a href="/devices" class="nav-link active">
                         <span class="nav-icon">🔌</span>
                         <span class="nav-text">Device Analysis</span>
                     </a>
@@ -64,100 +64,98 @@
             <header class="header">
                 <div class="header-content">
                     <div class="logo">
-                        <span class="logo-icon">⚡</span>
-                        <h1>Smart Energy Dashboard</h1>
+                        <span class="logo-icon">🔌</span>
+                        <h1>Device Analysis</h1>
                     </div>
                     <div class="header-info">
-                        <span id="date-range"></span>
+                        <span>Per-device consumption insights</span>
                     </div>
                 </div>
             </header>
 
             <main class="main-content">
-                <!-- Overview Cards -->
+                <!-- Device Selector -->
+                <section class="device-selector">
+                    <div class="card" style="padding: 1.5rem;">
+                        <div class="form-row" style="align-items: end;">
+                            <div class="form-group" style="margin-bottom: 0; flex: 2;">
+                                <label class="form-label">Select Device</label>
+                                <select id="device-select" class="form-select">
+                                    <option value="">Loading devices...</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                                <label class="form-label">Time Range</label>
+                                <select id="time-range" class="form-select">
+                                    <option value="day">Today</option>
+                                    <option value="week" selected>This Week</option>
+                                    <option value="month">This Month</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="loadDeviceData()">🔍 Analyze</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Device Stats -->
                 <section class="overview-section">
                     <div class="card stat-card">
-                        <div class="stat-icon">🔌</div>
+                        <div class="stat-icon">⚡</div>
                         <div class="stat-info">
-                            <h3>Total Usage</h3>
-                            <p id="total-usage">-- kWh</p>
+                            <h3>Total Consumption</h3>
+                            <p id="device-total">-- kWh</p>
                         </div>
                     </div>
                     <div class="card stat-card">
                         <div class="stat-icon">📊</div>
                         <div class="stat-info">
-                            <h3>Avg. Consumption</h3>
-                            <p id="avg-usage">-- kW</p>
-                        </div>
-                    </div>
-                    <div class="card stat-card">
-                        <div class="stat-icon">☀️</div>
-                        <div class="stat-info">
-                            <h3>Solar Generated</h3>
-                            <p id="solar-gen">-- kWh</p>
+                            <h3>Average Usage</h3>
+                            <p id="device-avg">-- kW</p>
                         </div>
                     </div>
                     <div class="card stat-card">
                         <div class="stat-icon">📈</div>
                         <div class="stat-info">
                             <h3>Peak Usage</h3>
-                            <p id="max-usage">-- kW</p>
+                            <p id="device-peak">-- kW</p>
+                        </div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-info">
+                            <h3>Min Usage</h3>
+                            <p id="device-min">-- kW</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Charts Section -->
+                <!-- Device Charts -->
                 <section class="charts-section">
                     <div class="card chart-card">
                         <h2>Hourly Consumption Pattern</h2>
-                        <canvas id="hourlyChart"></canvas>
+                        <canvas id="deviceHourlyChart"></canvas>
                     </div>
                     <div class="card chart-card">
-                        <h2>Daily Energy Trend</h2>
-                        <canvas id="dailyChart"></canvas>
+                        <h2>Daily Consumption Trend</h2>
+                        <canvas id="deviceDailyChart"></canvas>
                     </div>
                 </section>
 
-                <!-- Device Analysis -->
+                <!-- Device Comparison -->
+                <section class="charts-section" style="grid-template-columns: 1fr;">
+                    <div class="card chart-card">
+                        <h2>Device Comparison - Top 5 Consumers</h2>
+                        <canvas id="deviceComparisonChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </section>
+
+                <!-- Device List -->
                 <section class="device-section">
-                    <div class="card device-card">
-                        <h2>Device-wise Consumption</h2>
-                        <div class="device-chart-container">
-                            <canvas id="deviceChart"></canvas>
+                    <div class="card" style="grid-column: span 2;">
+                        <h2>All Devices</h2>
+                        <div class="device-list" id="all-devices-list" style="padding: 1rem 1.5rem;">
+                            <div class="spinner"></div>
                         </div>
-                    </div>
-                    <div class="card device-list-card">
-                        <h2>Top Energy Consumers</h2>
-                        <div id="device-list" class="device-list"></div>
-                    </div>
-                </section>
-
-                <!-- Model Performance -->
-                <section class="model-section">
-                    <div class="card model-card">
-                        <h2>Model Performance Comparison</h2>
-                        <div class="model-comparison">
-                            <div class="model-box">
-                                <h3>Baseline (Linear Regression)</h3>
-                                <div class="metric"><span>MAE:</span> <span id="lr-mae">--</span></div>
-                                <div class="metric"><span>RMSE:</span> <span id="lr-rmse">--</span></div>
-                                <div class="metric"><span>R²:</span> <span id="lr-r2">--</span></div>
-                            </div>
-                            <div class="model-box lstm">
-                                <h3>LSTM (Deep Learning)</h3>
-                                <div class="metric"><span>MAE:</span> <span id="lstm-mae">--</span></div>
-                                <div class="metric"><span>RMSE:</span> <span id="lstm-rmse">--</span></div>
-                                <div class="metric"><span>R²:</span> <span id="lstm-r2">--</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Smart Suggestions -->
-                <section class="suggestions-section">
-                    <div class="card suggestions-card">
-                        <h2>💡 Smart Energy-Saving Suggestions</h2>
-                        <div id="suggestions-list" class="suggestions-list"></div>
                     </div>
                 </section>
             </main>
@@ -168,7 +166,7 @@
         </div>
     </div>
 
-    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/devices.js"></script>
     <script>
         function toggleNav() {
             document.querySelector('.sidebar').classList.toggle('open');

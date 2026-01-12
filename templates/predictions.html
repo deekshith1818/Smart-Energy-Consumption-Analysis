@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Predictions | Smart Energy Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Mobile Nav Toggle -->
+        <button class="nav-toggle" onclick="toggleNav()">☰</button>
+        <div class="nav-overlay" onclick="toggleNav()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <span class="logo-icon">⚡</span>
+                    <h2>Smart Energy</h2>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="/" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="/predictions" class="nav-link active">
+                        <span class="nav-icon">🔮</span>
+                        <span class="nav-text">Predictions</span>
+                    </a>
+                    <a href="/devices" class="nav-link">
+                        <span class="nav-icon">🔌</span>
+                        <span class="nav-text">Device Analysis</span>
+                    </a>
+                    <a href="/history" class="nav-link">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-text">Historical Data</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tools</div>
+                    <a href="/reports" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2026 Smart Energy Analysis</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <header class="header">
+                <div class="header-content">
+                    <div class="logo">
+                        <span class="logo-icon">🔮</span>
+                        <h1>Energy Predictions</h1>
+                    </div>
+                    <div class="header-info">
+                        <span>Forecast future consumption</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <!-- Prediction Form -->
+                <section class="overview-section" style="grid-template-columns: 1fr 1fr;">
+                    <div class="card" style="padding: 1.5rem;">
+                        <h2 style="border: none; padding: 0 0 1rem 0;">Prediction Settings</h2>
+                        <form id="prediction-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Select Model</label>
+                                    <select id="model-select" class="form-select">
+                                        <option value="lstm">LSTM (Deep Learning)</option>
+                                        <option value="linear">Linear Regression</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Prediction Hours</label>
+                                    <select id="hours-select" class="form-select">
+                                        <option value="1">Next 1 Hour</option>
+                                        <option value="6">Next 6 Hours</option>
+                                        <option value="12">Next 12 Hours</option>
+                                        <option value="24" selected>Next 24 Hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Temperature (°C)</label>
+                                    <input type="number" id="temp-input" class="form-input" value="22" min="-10"
+                                        max="45">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Humidity (%)</label>
+                                    <input type="number" id="humidity-input" class="form-input" value="50" min="0"
+                                        max="100">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Day Type</label>
+                                <select id="day-type" class="form-select">
+                                    <option value="weekday">Weekday</option>
+                                    <option value="weekend">Weekend</option>
+                                </select>
+                            </div>
+                            <div class="btn-group" style="margin-top: 1rem;">
+                                <button type="submit" class="btn btn-primary">🔮 Generate Prediction</button>
+                                <button type="reset" class="btn btn-secondary">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem;">
+                        <h2 style="border: none; padding: 0 0 1rem 0;">Prediction Result</h2>
+                        <div id="prediction-result">
+                            <div class="prediction-result" style="text-align: center;">
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Configure settings and
+                                    click "Generate Prediction"</p>
+                                <div class="prediction-value">--</div>
+                                <span class="prediction-unit">kWh</span>
+                                <div class="prediction-confidence">
+                                    <span>Model Confidence: <strong id="confidence-value">--%</strong></span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="confidence-bar" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Prediction Chart -->
+                <section class="charts-section" style="grid-template-columns: 1fr;">
+                    <div class="card chart-card">
+                        <h2>Predicted vs Historical Consumption</h2>
+                        <canvas id="predictionChart" style="max-height: 350px;"></canvas>
+                    </div>
+                </section>
+
+                <!-- Model Info -->
+                <section class="model-section">
+                    <div class="card model-card">
+                        <h2>Model Information</h2>
+                        <div class="model-comparison">
+                            <div class="model-box">
+                                <h3>Linear Regression</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                                    Fast, interpretable baseline model. Best for linear consumption patterns and quick
+                                    estimates.
+                                </p>
+                                <div class="metric" style="margin-top: 1rem;"><span>Speed:</span> <span>⚡ Fast</span>
+                                </div>
+                                <div class="metric"><span>Accuracy:</span> <span>Good</span></div>
+                            </div>
+                            <div class="model-box lstm">
+                                <h3>LSTM Neural Network</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                                    Deep learning model that captures temporal patterns. Best for complex consumption
+                                    behaviors.
+                                </p>
+                                <div class="metric" style="margin-top: 1rem;"><span>Speed:</span> <span>🐢 Slower</span>
+                                </div>
+                                <div class="metric"><span>Accuracy:</span> <span>Excellent</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="footer">
+                <p>Smart Energy Consumption Analysis &amp; Prediction | Powered by Machine Learning</p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/predictions.js"></script>
+    <script>
+        function toggleNav() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.querySelector('.nav-overlay').classList.toggle('show');
+        }
+    </script>
+</body>
+
+</html>

@@ -147,6 +147,30 @@ def index():
     return render_template('dashboard.html')
 
 
+@app.route('/predictions')
+def predictions_page():
+    """Render the predictions page."""
+    return render_template('predictions.html')
+
+
+@app.route('/devices')
+def devices_page():
+    """Render the device analysis page."""
+    return render_template('devices.html')
+
+
+@app.route('/history')
+def history_page():
+    """Render the historical data page."""
+    return render_template('history.html')
+
+
+@app.route('/reports')
+def reports_page():
+    """Render the reports page."""
+    return render_template('reports.html')
+
+
 @app.route('/api/overview')
 def get_overview():
     """Get overall energy consumption overview."""
@@ -303,6 +327,180 @@ def get_model_comparison():
                 'r2': round(lstm['metrics']['r2'], 6) if not np.isnan(lstm['metrics']['r2']) else 'N/A'
             }
         })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/device/<device_name>')
+def get_single_device(device_name):
+    """Get specific device consumption data."""
+    if 'hourly' not in data_cache:
+        return jsonify({'error': 'Data not loaded'}), 500
+    
+    df = data_cache['hourly']
+    col_name = f"{device_name} [kW]"
+    
+    if col_name not in df.columns:
+        # Try partial match
+        matching_cols = [c for c in df.columns if device_name.lower() in c.lower()]
+        if matching_cols:
+            col_name = matching_cols[0]
+        else:
+            return jsonify({'error': f'Device {device_name} not found'}), 404
+    
+    # Calculate stats
+    total = df[col_name].sum()
+    avg = df[col_name].mean()
+    peak = df[col_name].max()
+    min_val = df[col_name].min()
+    
+    # Hourly pattern
+    df_temp = df.copy()
+    df_temp['hour'] = df_temp.index.hour
+    hourly = df_temp.groupby('hour')[col_name].mean().tolist()
+    
+    # Daily totals (last 7 days)
+    daily = df[col_name].resample('D').sum().tail(7).tolist()
+    
+    return jsonify({
+        'device': device_name,
+        'total': round(total, 2),
+        'average': round(avg, 4),
+        'peak': round(peak, 4),
+        'min': round(min_val, 4),
+        'hourly': [round(h, 4) for h in hourly],
+        'daily': [round(d, 2) for d in daily]
+    })
+
+
+@app.route('/api/history')
+def get_history_data():
+    """Get historical consumption data based on period."""
+    if 'hourly' not in data_cache:
+        return jsonify({'error': 'Data not loaded'}), 500
+    
+    period = request.args.get('period', 'month')
+    df = data_cache['hourly']
+    
+    # Determine days based on period
+    days_map = {'week': 7, 'month': 30, 'quarter': 90, 'year': 365}
+    days = days_map.get(period, 30)
+    
+    # Filter to requested period
+    end_date = df.index.max()
+    start_date = end_date - timedelta(days=days)
+    df_period = df[df.index >= start_date]
+    
+    # Calculate daily totals
+    daily = df_period.resample('D')['use [kW]'].sum()
+    
+    # Stats
+    total = daily.sum()
+    avg = daily.mean()
+    peak = df_period['use [kW]'].max()
+    
+    # Hourly distribution
+    df_temp = df_period.copy()
+    df_temp['hour'] = df_temp.index.hour
+    hourly = df_temp.groupby('hour')['use [kW]'].mean().tolist()
+    
+    # Weekday pattern
+    df_temp['weekday'] = df_temp.index.dayofweek
+    weekday = df_temp.groupby('weekday')['use [kW]'].sum().tolist()
+    
+    # Calculate comparison with previous period
+    prev_start = start_date - timedelta(days=days)
+    df_prev = df[(df.index >= prev_start) & (df.index < start_date)]
+    prev_daily = df_prev.resample('D')['use [kW]'].sum()
+    prev_total = prev_daily.sum()
+    prev_avg = prev_daily.mean() if len(prev_daily) > 0 else avg
+    
+    total_change = ((total - prev_total) / prev_total * 100) if prev_total > 0 else 0
+    avg_change = ((avg - prev_avg) / prev_avg * 100) if prev_avg > 0 else 0
+    
+    return jsonify({
+        'labels': [str(d.date()) for d in daily.index],
+        'data': [round(v, 2) for v in daily.values],
+        'stats': {
+            'total': round(total, 2),
+            'average': round(avg, 2),
+            'peak': round(peak, 4),
+            'cost': round(total * 0.12, 2),
+            'totalChange': round(total_change, 1),
+            'avgChange': round(avg_change, 1),
+            'peakChange': round((peak - df_prev['use [kW]'].max()) / df_prev['use [kW]'].max() * 100, 1) if len(df_prev) > 0 and df_prev['use [kW]'].max() > 0 else 0,
+            'costChange': round(total_change, 1)  # Same as total change
+        },
+        'hourly': [round(h, 4) for h in hourly],
+        'weekday': [round(w, 2) for w in weekday]
+    })
+
+
+@app.route('/api/generate-report', methods=['POST'])
+def generate_report():
+    """Generate energy consumption report."""
+    if 'hourly' not in data_cache:
+        return jsonify({'error': 'Data not loaded'}), 500
+    
+    try:
+        data = request.json or {}
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        report_type = data.get('type', 'daily')
+        
+        df = data_cache['hourly']
+        
+        # Parse dates
+        if start_date:
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        else:
+            start_dt = df.index.min()
+        
+        if end_date:
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            end_dt = df.index.max()
+        
+        # Filter data
+        df_filtered = df[(df.index >= start_dt) & (df.index <= end_dt)]
+        
+        # Generate report based on type
+        if report_type == 'daily':
+            daily = df_filtered.resample('D')['use [kW]'].agg(['sum', 'mean', 'max'])
+            report = []
+            for date, row in daily.iterrows():
+                report.append({
+                    'date': str(date.date()),
+                    'total': round(row['sum'], 2),
+                    'average': round(row['mean'], 4),
+                    'peak': round(row['max'], 4),
+                    'cost': round(row['sum'] * 0.12, 2)
+                })
+        elif report_type == 'weekly':
+            weekly = df_filtered.resample('W')['use [kW]'].agg(['sum', 'mean', 'max'])
+            report = []
+            for date, row in weekly.iterrows():
+                report.append({
+                    'date': f"Week of {str(date.date())}",
+                    'total': round(row['sum'], 2),
+                    'average': round(row['mean'], 4),
+                    'peak': round(row['max'], 4),
+                    'cost': round(row['sum'] * 0.12, 2)
+                })
+        else:
+            monthly = df_filtered.resample('ME')['use [kW]'].agg(['sum', 'mean', 'max'])
+            report = []
+            for date, row in monthly.iterrows():
+                report.append({
+                    'date': date.strftime('%B %Y'),
+                    'total': round(row['sum'], 2),
+                    'average': round(row['mean'], 4),
+                    'peak': round(row['max'], 4),
+                    'cost': round(row['sum'] * 0.12, 2)
+                })
+        
+        return jsonify({'report': report})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

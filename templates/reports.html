@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | Smart Energy Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Mobile Nav Toggle -->
+        <button class="nav-toggle" onclick="toggleNav()">☰</button>
+        <div class="nav-overlay" onclick="toggleNav()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <span class="logo-icon">⚡</span>
+                    <h2>Smart Energy</h2>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="/" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="/predictions" class="nav-link">
+                        <span class="nav-icon">🔮</span>
+                        <span class="nav-text">Predictions</span>
+                    </a>
+                    <a href="/devices" class="nav-link">
+                        <span class="nav-icon">🔌</span>
+                        <span class="nav-text">Device Analysis</span>
+                    </a>
+                    <a href="/history" class="nav-link">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-text">Historical Data</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tools</div>
+                    <a href="/reports" class="nav-link active">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2026 Smart Energy Analysis</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <header class="header">
+                <div class="header-content">
+                    <div class="logo">
+                        <span class="logo-icon">📋</span>
+                        <h1>Reports</h1>
+                    </div>
+                    <div class="header-info">
+                        <span>Generate and download energy reports</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <!-- Report Type Selection -->
+                <section class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <h2 style="border: none; padding: 0 0 1rem 0;">Select Report Type</h2>
+                    <div class="report-type-grid">
+                        <div class="report-type-card selected" data-type="daily">
+                            <div class="report-type-icon">📅</div>
+                            <div class="report-type-title">Daily Summary</div>
+                            <div class="report-type-desc">Hourly breakdown for a single day</div>
+                        </div>
+                        <div class="report-type-card" data-type="weekly">
+                            <div class="report-type-icon">📊</div>
+                            <div class="report-type-title">Weekly Report</div>
+                            <div class="report-type-desc">Daily totals and trends for the week</div>
+                        </div>
+                        <div class="report-type-card" data-type="monthly">
+                            <div class="report-type-icon">📈</div>
+                            <div class="report-type-title">Monthly Report</div>
+                            <div class="report-type-desc">Comprehensive monthly analysis</div>
+                        </div>
+                        <div class="report-type-card" data-type="device">
+                            <div class="report-type-icon">🔌</div>
+                            <div class="report-type-title">Device Report</div>
+                            <div class="report-type-desc">Per-device consumption breakdown</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Report Settings -->
+                <section class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <h2 style="border: none; padding: 0 0 1rem 0;">Report Settings</h2>
+                    <form id="report-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" id="start-date" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">End Date</label>
+                                <input type="date" id="end-date" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Include Sections</label>
+                            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" checked id="inc-summary"> Summary Statistics
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" checked id="inc-devices"> Device Breakdown
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" checked id="inc-hourly"> Hourly Data
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="inc-suggestions"> Suggestions
+                                </label>
+                            </div>
+                        </div>
+                        <div class="btn-group" style="margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-primary" onclick="generateReport()">📊 Generate
+                                Report</button>
+                            <button type="button" class="btn btn-success" onclick="downloadReport('csv')">⬇️ Download
+                                CSV</button>
+                            <button type="button" class="btn btn-secondary" onclick="window.print()">🖨️ Print
+                                Report</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Report Preview -->
+                <section class="card" style="padding: 1.5rem;">
+                    <h2 style="border: none; padding: 0 0 1rem 0;">Report Preview</h2>
+                    <div id="report-preview" class="report-preview">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Total (kWh)</th>
+                                    <th>Average (kW)</th>
+                                    <th>Peak (kW)</th>
+                                    <th>Est. Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-table-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                                        Click "Generate Report" to preview data
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="footer">
+                <p>Smart Energy Consumption Analysis &amp; Prediction | Powered by Machine Learning</p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/reports.js"></script>
+    <script>
+        function toggleNav() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.querySelector('.nav-overlay').classList.toggle('show');
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Data | Smart Energy Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Mobile Nav Toggle -->
+        <button class="nav-toggle" onclick="toggleNav()">☰</button>
+        <div class="nav-overlay" onclick="toggleNav()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <span class="logo-icon">⚡</span>
+                    <h2>Smart Energy</h2>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <a href="/" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="/predictions" class="nav-link">
+                        <span class="nav-icon">🔮</span>
+                        <span class="nav-text">Predictions</span>
+                    </a>
+                    <a href="/devices" class="nav-link">
+                        <span class="nav-icon">🔌</span>
+                        <span class="nav-text">Device Analysis</span>
+                    </a>
+                    <a href="/history" class="nav-link active">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-text">Historical Data</span>
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tools</div>
+                    <a href="/reports" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2026 Smart Energy Analysis</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <header class="header">
+                <div class="header-content">
+                    <div class="logo">
+                        <span class="logo-icon">📈</span>
+                        <h1>Historical Data</h1>
+                    </div>
+                    <div class="header-info">
+                        <span>Analyze consumption trends over time</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <!-- Time Filter -->
+                <section class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <div class="time-filter">
+                        <button class="filter-btn" data-period="week">Last 7 Days</button>
+                        <button class="filter-btn active" data-period="month">Last 30 Days</button>
+                        <button class="filter-btn" data-period="quarter">Last 90 Days</button>
+                        <button class="filter-btn" data-period="year">Last Year</button>
+                    </div>
+                </section>
+
+                <!-- Stats Summary -->
+                <section class="card" style="margin-bottom: 2rem;">
+                    <h2>Period Summary</h2>
+                    <div class="stats-summary">
+                        <div class="summary-item">
+                            <div class="summary-value" id="history-total">-- kWh</div>
+                            <div class="summary-label">Total Consumption</div>
+                            <div class="summary-compare positive" id="history-total-compare">↑ --% vs previous</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="history-avg">-- kWh</div>
+                            <div class="summary-label">Daily Average</div>
+                            <div class="summary-compare positive" id="history-avg-compare">↑ --% vs previous</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="history-peak">-- kW</div>
+                            <div class="summary-label">Peak Usage</div>
+                            <div class="summary-compare negative" id="history-peak-compare">↓ --% vs previous</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="history-cost">$--</div>
+                            <div class="summary-label">Estimated Cost</div>
+                            <div class="summary-compare positive" id="history-cost-compare">↑ --% vs previous</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Main Trend Chart -->
+                <section class="charts-section" style="grid-template-columns: 1fr;">
+                    <div class="card chart-card">
+                        <h2>Consumption Trend</h2>
+                        <canvas id="historyTrendChart" style="max-height: 350px;"></canvas>
+                    </div>
+                </section>
+
+                <!-- Breakdown Charts -->
+                <section class="charts-section">
+                    <div class="card chart-card">
+                        <h2>Hourly Distribution</h2>
+                        <canvas id="historyHourlyChart"></canvas>
+                    </div>
+                    <div class="card chart-card">
+                        <h2>Day of Week Pattern</h2>
+                        <canvas id="historyWeekdayChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Peak Hours -->
+                <section class="card" style="padding: 1.5rem;">
+                    <h2 style="border: none; padding: 0 0 1rem 0;">Peak Usage Hours</h2>
+                    <div class="device-stats-grid" id="peak-hours">
+                        <div class="device-stat">
+                            <div class="device-stat-value">7-9 AM</div>
+                            <div class="device-stat-label">Morning Peak</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="device-stat-value">12-2 PM</div>
+                            <div class="device-stat-label">Midday Peak</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="device-stat-value">6-9 PM</div>
+                            <div class="device-stat-label">Evening Peak</div>
+                        </div>
+                        <div class="device-stat">
+                            <div class="device-stat-value">2-5 AM</div>
+                            <div class="device-stat-label">Lowest Usage</div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="footer">
+                <p>Smart Energy Consumption Analysis &amp; Prediction | Powered by Machine Learning</p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/static/js/history.js"></script>
+    <script>
+        function toggleNav() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.querySelector('.nav-overlay').classList.toggle('show');
+        }
+    </script>
+</body>
+
+</html>
